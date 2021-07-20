@@ -3,37 +3,22 @@ const app = express();
 app.use(express.json());
 const { models: { User }} = require('./db');
 const path = require('path');
-const JWT = require('jsonwebtoken')
-
-const token = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization
-        const user = await User.byToken(token)
-        req.user = user
-        next()
-    } catch (error) {
-        next(error)
-    }
-
-}
 
 app.get('/', (req, res)=> res.sendFile(path.join(__dirname, 'index.html')));
 
 app.post('/api/auth', async(req, res, next)=> {
+    console.log('req.body', req.body)
   try {
-    res.send({ token: JWT.sign({userId: req.body.username}, process.env.JWT)});
+    res.send({ token: await User.authenticate(req.body)});
   }
   catch(ex){
     next(ex);
   }
 });
 
-app.get('/api/auth', token, async(req, res, next)=> {
+app.get('/api/auth', async(req, res, next)=> {
   try {
-    if (req.user) {
-        console.log('req.user --> ', req.user)
-        res.send(req.user)
-    } 
+    res.send(await User.byToken(req.headers.authorization));
   }
   catch(ex){
     next(ex);

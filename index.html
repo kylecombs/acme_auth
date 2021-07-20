@@ -57,6 +57,7 @@
           super();
           this.state = {
             auth: {},
+            notes: []
           };
           this.signIn = this.signIn.bind(this);
           this.logout = this.logout.bind(this);
@@ -74,11 +75,16 @@
               },
             });
             this.setState({ auth: response.data });
+
+            const notes = await axios.get(`/api/users/${this.state.auth.id}/notes`)
+
+            this.setState({ notes: notes.data[0].notes })
           }
         }
         componentDidMount() {
           this.attemptTokenLogin();
         }
+
         async signIn(credentials) {
           let response = await axios.post("/api/auth", credentials);
           const { token } = response.data;
@@ -86,7 +92,8 @@
           this.attemptTokenLogin();
         }
         render() {
-          const { auth } = this.state;
+          const { auth, notes } = this.state;
+          console.log('notes', notes)
           const { signIn, logout } = this;
           if (!auth.id) {
             return <SignIn signIn={signIn} />;
@@ -95,6 +102,7 @@
               <div>
                 Welcome {auth.username}
                 <button onClick={logout}>Logout</button>
+                {notes.map((note) => <h1 key={note.id}>{note.text}</h1>)}
               </div>
             );
           }
